@@ -1,10 +1,12 @@
 import argparse
 import dataclasses
 import datetime
+import subprocess
 
 import httpx
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from string import Formatter, Template
 
 
 @dataclasses.dataclass
@@ -46,16 +48,29 @@ class ApiBingImage(httpx.Client):
         return resp.content
 
 
-def download_image(path: str, days_before: int = None) -> bytes:
-    base_download_path = Path(__file__).parent
+def download_image(base_download_path: str, days_before: int = None) -> Path:
     api = ApiBingImage()
-    info = api.get_image_info(days_before=4)
+    info = api.get_image_info(days_before=days_before)
     picture_name = info.id + '.jpg'
     image_path = base_download_path / picture_name
     print(f"Download image: {info.title}. Picture_name: {picture_name}")
 
     with open(image_path, 'wb') as f:
         f.write(api.get_content_image(info))
+    return image_path
+
+
+def set_image_to_mac_monitor(monitor: int, file_path):
+    cmd_for_osascript = Template("""\
+    set tlst to {}
+        tell application "System Events"
+            set tlst to a reference to every desktop
+            set picture of item $MONITOR of tlst to "$FILEPATH"
+        end tell
+    """).substitute(MONITOR=monitor, FILEPATH=file_path)
+
+    print(f"Set image to monitor: {monitor}")
+    subprocess.run(f"osascript - << {cmd_for_osascript}", shell=True)
 
 
 def cli():
@@ -66,8 +81,13 @@ def cli():
                         help='Days before image was in Bing')
     parser.add_argument('--base-path', type=Path, default=Path.cwd(), help='Path for downloading images')
 
+    parser.add_argument('--mac-monitor', type=int, help='Set image to Mac monitor')
+
     args = parser.parse_args()
-    download_image(args.base_path, args.days_before)
+
+    image_path = download_image(args.base_path, args.days_before)
+    if args.mac_monitor:
+        set_image_to_mac_monitor(args.mac_monitor, image_path)
 
 
 if __name__ == '__main__':
