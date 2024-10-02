@@ -79,7 +79,7 @@ def cli():
     parser.add_argument('--days-before', type=int,
                         default=0,
                         help='Days before image was in Bing')
-    parser.add_argument('--base-path', type=Path, default=Path.cwd(), help='Path for downloading images')
+    parser.add_argument('--base-path', type=Path, default=Path(__file__).parent, help='Path for downloading images')
 
     parser.add_argument('--mac-monitor', type=int, help='Set image to Mac monitor')
 
