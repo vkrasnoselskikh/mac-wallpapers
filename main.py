@@ -10,6 +10,8 @@ from string import Formatter, Template
 
 DEFAULT_PATH_DOWNLOAD = (Path.home() / 'Pictures'/ 'bing-wallpapers')
 
+DEFAULT_PATH_DOWNLOAD.mkdir(parents=True, exist_ok=True)
+
 
 @dataclasses.dataclass
 class ImageInfo:
@@ -60,21 +62,21 @@ def download_image(base_download_path: Path, days_before: int = None) -> Path:
     return image_path
 
 
-def set_image_to_mac_monitor(monitor: int, file_path):
+def set_image_to_mac_monitor(index_display: int, file_path):
     cmd_for_osascript = Template("""\
     set tlst to {}
         tell application "System Events"
             set tlst to a reference to every desktop
-            set picture of item $MONITOR of tlst to "$FILEPATH"
+            set picture of item $MAC_DISPLAY of tlst to "$FILEPATH"
         end tell
-    """).substitute(MONITOR=monitor, FILEPATH=file_path)
+    """).substitute(MAC_DISPLAY=index_display, FILEPATH=file_path)
 
-    print(f"Set image to monitor: {monitor}")
+    print(f"Set image to monitor: {index_display}")
     subprocess.run(f"osascript - << {cmd_for_osascript}", shell=True)
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="Download images from Bing.")
+    parser = argparse.ArgumentParser(description="Download images from Bing and set as wallpaper for Mac.")
 
     parser.add_argument(
         "--days-before", type=int, default=0, help="Days before image was in Bing"
@@ -86,14 +88,14 @@ def cli():
         help="Path for downloading images",
     )
 
-    parser.add_argument("--mac-monitor", type=int, default=1, help="Set image to Mac monitor")
+    parser.add_argument("--display", type=int, default=1, help="Set image for display by order number.")
 
 
     args = parser.parse_args()
 
     image_path = download_image(args.base_path, args.days_before)
     if args.mac_monitor:
-        set_image_to_mac_monitor(args.mac_monitor, image_path)
+        set_image_to_mac_monitor(args.display, image_path)
 
 
 if __name__ == "__main__":
