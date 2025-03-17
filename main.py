@@ -4,14 +4,18 @@ import datetime
 import subprocess
 
 import httpx
+import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from string import Formatter, Template
 
-DEFAULT_PATH_DOWNLOAD = (Path.home() / 'Pictures'/ 'bing-wallpapers')
+DEFAULT_PATH_DOWNLOAD = Path.home() / "Pictures" / "bing-wallpapers"
 
 DEFAULT_PATH_DOWNLOAD.mkdir(parents=True, exist_ok=True)
 
+logger = logging.getLogger("bing-download")
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('httpx').setLevel(logging.ERROR)
 
 @dataclasses.dataclass
 class ImageInfo:
@@ -55,8 +59,9 @@ def download_image(base_download_path: Path, days_before: int = None) -> Path:
     info = api.get_image_info(days_before=days_before)
     picture_name = info.id + ".jpg"
     image_path = base_download_path / picture_name
-    print(f"Download image: {info.title}. Picture_name: {picture_name}")
+    logger.info(f"Download image: {info.title}")
 
+    logger.info(f"To file: {image_path}")
     with open(image_path.absolute(), "wb") as f:
         f.write(api.get_content_image(info))
     return image_path
@@ -71,12 +76,14 @@ def set_image_to_mac_monitor(index_display: int, file_path):
         end tell
     """).substitute(MAC_DISPLAY=index_display, FILEPATH=file_path)
 
-    print(f"Set image to monitor: {index_display}")
+    logger.debug(f"Set image to monitor: {index_display}")
     subprocess.run(f"osascript - << {cmd_for_osascript}", shell=True)
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="Download images from Bing and set as wallpaper for Mac.")
+    parser = argparse.ArgumentParser(
+        description="Download images from Bing and set as wallpaper for Mac."
+    )
 
     parser.add_argument(
         "--days-before", type=int, default=0, help="Days before image was in Bing"
@@ -88,13 +95,14 @@ def cli():
         help="Path for downloading images",
     )
 
-    parser.add_argument("--display", type=int, default=1, help="Set image for display by order number.")
-
+    parser.add_argument(
+        "--display", type=int, default=1, help="Set image for display by order number."
+    )
 
     args = parser.parse_args()
 
     image_path = download_image(args.base_path, args.days_before)
-    if args.mac_monitor:
+    if args.display:
         set_image_to_mac_monitor(args.display, image_path)
 
 
