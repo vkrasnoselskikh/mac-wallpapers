@@ -11,7 +11,7 @@ from string import Formatter, Template
 
 DEFAULT_PATH_DOWNLOAD = Path.home() / "Pictures" / "bing-wallpapers"
 
-DEFAULT_PATH_DOWNLOAD.mkdir(parents=True, exist_ok=True)
+DEFAULT_PATH_DOWNLOAD.mkdir(exist_ok=True)
 
 logger = logging.getLogger("bing-download")
 logging.basicConfig(level=logging.INFO)
