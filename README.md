@@ -1,4 +1,4 @@
-# Command for install wallpaper from Bing
+# Command line tool to install Bing wallpapers on a Mac.
 
 ## Usage
 
@@ -8,7 +8,6 @@
 ```sh
 uv run main.py
 ```
-
 
 ## Use help
 
